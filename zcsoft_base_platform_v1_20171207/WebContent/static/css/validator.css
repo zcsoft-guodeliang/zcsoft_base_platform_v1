@@ -1,0 +1,10 @@
+label.error {
+    position: absolute;
+    background: url(../images/arrow_bg.png) no-repeat left center;
+    color: #fff;
+    height: 40px;
+    line-height: 29px;
+    z-index: 9999;
+    white-space: nowrap;
+    border-radius: 0 5px 18px 0;
+}

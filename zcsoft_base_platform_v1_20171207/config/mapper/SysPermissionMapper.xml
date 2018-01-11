@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zcsoft.mapper.permission.SysPermissionMapper" >
+	<sql id="query_user_permission_sql">
+		<if test="usercode!='superadmin'"> <!-- 非管理员用户 -->
+			 AND id IN 
+			  (SELECT 
+			    sys_permission_id 
+			  FROM
+			    t_sys_role_permission 
+			  WHERE sys_role_id IN 
+			    (SELECT 
+			      sys_role_id 
+			    FROM
+			      t_sys_user_role 
+			    WHERE sys_user_id = #{userid}))
+		</if>
+	</sql>
+	
+	<sql id="query_user_menu_sql">
+		<if test="usercode!='superadmin'"> <!-- 非管理员用户 -->
+			 AND id IN 
+		  (SELECT 
+		    sys_permission_id 
+		  FROM
+		    t_sys_role_permission 
+		  WHERE sys_role_id IN 
+		    (SELECT 
+		      sys_role_id 
+		    FROM
+		      t_sys_user_role 
+		    WHERE sys_user_id = #{userid}))
+		</if>
+	</sql>
+	
+	<!-- 菜单查询 -->
+	<sql id="query_menu_sql">
+		<if test="parentid!=null and parentid!=''">
+		 and (parentid=#{parentid} or id=#{parentid})
+		</if>
+		<if test="available!=null and available!=''">
+			and available=#{available}
+		</if>
+		<if test="name!=null and name!=''">
+			and name like '%${name}%'
+		</if>
+		<if test="id!=null and id!=''">
+			and  id=#{id}
+		</if>
+	</sql>
+	<!-- 保存菜单 -->
+	<insert id="insertsysPermission" parameterType="sysPermission">
+	  <selectKey keyProperty="id" order="BEFORE" resultType="string">
+	  	select uuid()
+	  </selectKey>
+	   insert into t_sys_permission(id,name,type,url,icon,percode,parentid,available)
+	    values(#{id},#{name},#{type},#{url},#{icon},#{percode},#{parentid},#{available})
+	</insert>
+	
+	<!-- 修改菜单 -->
+	<update id="updateSysPermission" parameterType="sysPermission">
+	   update t_sys_permission set name=#{name},type=#{type},
+	   		url=#{url},icon=#{icon},percode=#{percode},parentid=#{parentid},available=#{available}
+	   where id=#{id}
+	</update>
+	
+	
+ <!-- 根据用户id查询url -->
+  <select id="findPermissionListByUserId" parameterType="com.zcsoft.pojo.user.ActiveUser" resultType="com.zcsoft.pojo.permission.SysPermission">
+	  SELECT   *  FROM  t_sys_permission  WHERE TYPE = 'permission'  and available='0'
+	  <include refid="query_user_permission_sql"></include>
+  </select>
+  
+   <!-- 根据用户id查询菜单 -->
+  <select id="findMenuListByUserId"  parameterType="com.zcsoft.pojo.user.ActiveUser" resultType="com.zcsoft.pojo.permission.SysPermission">
+  		SELECT   *  FROM  t_sys_permission  WHERE TYPE = 'menu'  and available='0' and parentid='-1'
+	  <include refid="query_user_menu_sql"></include>
+	   order by  sortstring asc
+  </select>
+  <!-- 根据用户id查询二级菜单 -->
+  <select id="findMenuByUseroid" parameterType="com.zcsoft.pojo.permission.SysPermissionUserCustom"  resultType="com.zcsoft.pojo.permission.SysPermission">
+        SELECT   *  FROM  t_sys_permission  WHERE TYPE = 'menu'  and available='0' and parentid=#{parentid}  
+    	<include refid="query_user_permission_sql"></include>
+    	 order by  sortstring asc
+  </select>
+  <!-- 查询菜单列表 -->
+   <select id="findMenuPage" parameterType="sysPermission"  resultType="com.zcsoft.pojo.permission.SysPermission">
+        SELECT   *  FROM  t_sys_permission  WHERE  1=1
+        <include refid="query_menu_sql"></include>
+        order by  sortstring asc
+  </select>
+  
+  	<select id="findSysPermissionTreeList" parameterType="sysPermission" resultType="com.zcsoft.pojo.Ztree">
+	   select id   id,name,parentid  pId,'true' open from t_sys_permission  m   where 1=1 
+	    <include refid="query_menu_sql"></include>
+	     order by  sortstring asc
+	</select>
+	<!-- 根据id查询菜单对象 -->
+	<select id="findSysPermissionById" parameterType="string"  resultType="sysPermission">
+        SELECT   *  FROM  t_sys_permission  WHERE  available='0'   and id=#{value}
+  </select>
+  
+</mapper>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 1、mapper代理开发 namespace 是由包名+类名（全路径名称） -->
+<mapper namespace="com.zcsoft.mapper.role.SysRoleMapper">
+	<resultMap type="role" id="resultMap">
+		<id column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="available" property="available" />
+		<!--菜单 -->
+		<collection property="permissions" ofType="com.zcsoft.pojo.permission.SysPermission"
+			column="id" select="selectSysRolePermissionByRoleId"></collection>
+	</resultMap>
+   <!--查询角色  -->
+    <select id="selectRolePage" parameterType="role" resultType="role">
+    	SELECT 
+    		t1.*
+       FROM
+       		 t_sys_role t1 
+       WHERE 
+       		 t1.available='0'  
+   </select>
+   
+   
+   <!-- 根据用户id查询角色列表 -->
+   <select id="selectRoleByUserId" parameterType="string" resultType="role">
+    	SELECT 
+    		t1.*
+       FROM
+       		 t_sys_role t1,t_sys_user_role t2 
+       WHERE 
+       		t1.available='0' and  t2.sys_user_id=#{value} and t1.`id`=t2.`sys_role_id` 
+   </select>
+	<!-- 查询角色树 -->   
+    <select id="selectRoleTreeList"   resultType="com.zcsoft.pojo.Ztree">
+    	SELECT 
+    		 id ,name ,'-1' pId 
+       FROM
+       		 t_sys_role t1 
+       WHERE 
+       		t1.available='0' 
+   </select>
+   	<!-- 批量插入 -->
+	<insert id="insertSysUserRolePermissionBatch"  parameterType="java.util.List">
+	   insert into t_sys_user_role(id,sys_user_id,sys_role_id)  
+	    values
+	   <foreach collection="list" item="rm" index="index" separator =",">
+	  		(#{rm.id},#{rm.userid},#{rm.roleid})
+	   </foreach>
+	</insert>
+	
+	<!-- 插入角色 -->
+	<insert id="insertSysRole" parameterType="role">
+		<selectKey keyProperty="id" order="BEFORE" resultType="string">
+			select uuid()
+		</selectKey>
+		insert into t_sys_role(id,name) values(#{id},#{name})
+	</insert>
+	<!-- 批量插入 -->
+	<insert id="insertSysRolePermissionBatch"  parameterType="java.util.List">
+	   insert into t_sys_role_permission(id,sys_role_id,sys_permission_id)  
+	    values
+	   <foreach collection="list" item="rm" index="index" separator =",">
+	  		(#{rm.id},#{rm.roleId},#{rm.permissionId})
+	   </foreach>
+	</insert>
+	<!-- 根据id查询角色 -->
+	<select id="selectSysRoleById" parameterType="string" resultMap="resultMap">
+		select * from t_sys_role where id=#{value}
+	</select>
+	
+	<!-- 根据id查询角色 -->
+	<select id="selectSysRolePermissionByRoleId" parameterType="string" resultType="com.zcsoft.pojo.role.RolePermission">
+		select id,sys_role_id roleId,sys_permission_id  permissionId  from t_sys_role_permission where sys_role_id=#{value}
+	</select>
+	
+	
+   <!-- 根据用户ID删除用户和角色关联 -->
+   <delete id="deleteSysUserRoleByUserId" parameterType="string">
+   		delete from t_sys_user_role where sys_user_id=#{value}
+   </delete>
+   <!-- 修改角色 -->
+   <update id="updateSysRole" parameterType="role">
+     update t_sys_role set name=#{name} where id=#{id}
+   </update>
+    <update id="updateSysRoleById" parameterType="string">
+     update t_sys_role set available='1' where id=#{id}
+   </update>
+   <!-- 删除角色和菜单关联-->
+   <delete id="deleteSysRolePermissionByRoleId" parameterType="string">
+   	delete from t_sys_role_permission where sys_role_id=#{value}
+   </delete>
+  
+</mapper>

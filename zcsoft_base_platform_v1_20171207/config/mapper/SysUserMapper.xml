@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 1、mapper代理开发 namespace 是由包名+类名（全路径名称） -->
+<mapper namespace="com.zcsoft.mapper.user.SysUserMapper">
+
+	<!-- 属性和列名映射 ，如果表中的字段名称和pojo实体类里面的字段名称不同 可以使用起别名或者使用resultMap -->
+	<resultMap type="sysUser" id="sysUserResultMap">
+		<id column="oid" property="oid" />
+		<result column="CODE" property="code" />
+		<result column="USER_PASS" property="userpass" />
+		<result column="USER_NAME" property="username" />
+		<result column="USER_TYPE" property="userType" />
+		<result column="USER_SEX" property="userSex" />
+		<result column="USER_TEL" property="userTel" />
+		<result column="USER_EMAIL" property="userEmail" />
+		<result column="DEL_FLAG" property="delFlag" />
+		<result column="CREATE_DATE" property="createDate" />
+		<result column="UPDATE_DATE" property="updateDate" />
+		<result column="ORDER_NUM" property="orderNum" />
+		<result column="openid" property="openid" />
+		<result column="salt" property="salt" />
+	</resultMap>
+
+	<resultMap type="sysUser" id="sysUserPageResultMap">
+		<id column="oid" property="oid" />
+		<result column="CODE" property="code" />
+		<result column="USER_PASS" property="userpass" />
+		<result column="USER_NAME" property="username" />
+		<result column="USER_TYPE" property="userType" />
+		<result column="USER_SEX" property="userSex" />
+		<result column="USER_TEL" property="userTel" />
+		<result column="USER_EMAIL" property="userEmail" />
+		<result column="DEL_FLAG" property="delFlag" />
+		<result column="CREATE_DATE" property="createDate" />
+		<result column="UPDATE_DATE" property="updateDate" />
+		<result column="ORDER_NUM" property="orderNum" />
+		<result column="openid" property="openid" />
+		<result column="salt" property="salt" />
+		<!-- 用户角色 -->
+		<collection property="roles" ofType="com.zcsoft.pojo.role.Role"
+			column="oid" select="com.zcsoft.mapper.role.SysRoleMapper.selectRoleByUserId"></collection>
+	</resultMap>
+
+	<sql id="query_user_sql">
+		<if test="code!=null and code!=''">
+			and u.code=#{code}
+		</if>
+		<if test="username!=null and username!=''">
+			and u.USER_NAME like '%${username}%'
+		</if>
+		<if test="userpass!=null and userpass!=''">
+			and u.user_pass=#{userpass}
+		</if>
+		<if test="delFlag!=null and delFlag!=''">
+			and u.del_Flag=#{delFlag}
+		</if>
+		<if test="oid!='' and oid!=null">
+			and u.oid not in(#{oid})
+		</if>
+	</sql>
+
+	<!-- 用户查询分页 -->
+	<select id="selectSysUserPage" parameterType="sysUser"
+		resultMap="sysUserPageResultMap">
+		select
+		OID,CODE,USER_PASS,USER_NAME,USER_TYPE,USER_SEX,USER_TEL,USER_EMAIL,DEL_FLAG,CREATE_DATE,UPDATE_DATE,ORDER_NUM,headImg,openid,salt
+		from t_sys_user u
+		<where>
+			<include refid="query_user_sql"></include>
+		</where>
+	</select>
+	<!-- 根据用户名查询用户 -->
+	<select id="selectSysUserByCode" parameterType="sysUser"
+		resultMap="sysUserResultMap">
+		select
+		OID,CODE,USER_PASS,USER_NAME,USER_TYPE,ORDER_NUM,headImg,openid,salt
+		from t_sys_user u
+		<where>
+			<include refid="query_user_sql"></include>
+		</where>
+	</select>
+	<!-- 保存用户 -->
+	<insert id="insertSysUser" parameterType="sysUser">
+		<selectKey keyProperty="oid" order="BEFORE" resultType="string">
+			select uuid()
+		</selectKey>
+		insert into
+		t_sys_user(OID,code,USER_PASS,USER_NAME,USER_TYPE,USER_SEX,USER_TEL,USER_EMAIL,openid,headImg,salt)
+		values(#{oid},#{code},#{userpass},#{username},#{userType},#{userSex},#{userTel},#{userEmail},#{openid},#{headImg},#{salt})
+	</insert>
+
+	<select id="selectSysUserByCodeAndOid" parameterType="sysUser"
+		resultType="int">
+		select count(1) from t_sys_user u
+		<where>
+			<include refid="query_user_sql"></include>
+		</where>
+	</select>
+	<!-- 根据用户id查询用户对象 -->
+	<select id="selectSysUserByOId" parameterType="string"
+		resultMap="sysUserPageResultMap">
+		select
+		OID,CODE,USER_PASS,USER_NAME,USER_TYPE,USER_SEX,USER_TEL,
+		USER_EMAIL,DEL_FLAG,CREATE_DATE,UPDATE_DATE,ORDER_NUM,
+		headImg,openid,salt
+		from t_sys_user u
+		where u.OID=#{value}
+	</select>
+	<!-- 修改用户 -->
+	<update id="updateSysUser" parameterType="sysUser">
+	   update
+	   	 t_sys_user 
+	   set 
+	   		code=#{code} ,USER_NAME=#{username},USER_TYPE=#{userType},
+	   		USER_SEX=#{userSex},USER_TEL=#{userTel},USER_EMAIL=#{userEmail},
+	   		openid=#{openid},headImg=#{headImg}
+	   	where 
+	   	    oid=#{oid}
+	</update>
+	
+	<!-- 修改用户 -->
+	<update id="updateSysUserByID" parameterType="string">
+	   update  t_sys_user  set  del_Flag='2' where   oid=#{oid}
+	</update>
+</mapper>

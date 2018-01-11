@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 1、mapper代理开发 namespace 是由包名+类名（全路径名称） -->
+<mapper namespace="com.zcsoft.mapper.SysConfigMapper">
+   <select id="selectSysConfigByName" parameterType="string" resultType="com.zcsoft.pojo.SysConfig"> 
+     select * from t_sys_config where name=#{value}
+   </select>
+</mapper>
